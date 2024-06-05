@@ -24,6 +24,7 @@ type Fragment struct {
 	Packets  string `json:"packets"`
 	Length   string `json:"length"`
 	Interval string `json:"interval"`
+	Fixed    uint64 `json:"fixed"`
 }
 
 // Build implements Buildable
@@ -141,6 +142,11 @@ func (c *FreedomConfig) Build() (proto.Message, error) {
 				config.Fragment.IntervalMin, config.Fragment.IntervalMax = config.Fragment.IntervalMax, config.Fragment.IntervalMin
 			}
 		}
+
+		{
+			config.Fragment.Fixed = c.Fragment.Fixed
+		}
+
 	}
 
 	if c.Timeout != nil {

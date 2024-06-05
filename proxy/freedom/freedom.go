@@ -370,42 +370,31 @@ type FragmentWriter struct {
 func (f *FragmentWriter) Write(b []byte) (int, error) {
 	f.count++
 
-	if f.fragment.PacketsFrom == 0 && f.fragment.PacketsTo == 1 {
-		if f.count != 1 || len(b) <= 5 || b[0] != 22 {
-			return f.writer.Write(b)
-		}
-		recordLen := 5 + ((int(b[3]) << 8) | int(b[4]))
-		if len(b) < recordLen { // maybe already fragmented somehow
-			return f.writer.Write(b)
-		}
-		data := b[5:recordLen]
-		buf := make([]byte, 1024)
+	if f.fragment.Fixed > 0 && len(b) > int(f.fragment.Fixed) {
+		fragPart := b[:len(b)-int(f.fragment.Fixed)]
+		fixedPart := b[len(b)-int(f.fragment.Fixed):]
+
 		for from := 0; ; {
 			to := from + int(randBetween(int64(f.fragment.LengthMin), int64(f.fragment.LengthMax)))
-			if to > len(data) {
-				to = len(data)
+			if to > len(fragPart) {
+				to = len(fragPart)
 			}
-			copy(buf[:3], b)
-			copy(buf[5:], data[from:to])
-			l := to - from
-			from = to
-			buf[3] = byte(l >> 8)
-			buf[4] = byte(l)
-			_, err := f.writer.Write(buf[:5+l])
+			n, err := f.writer.Write(fragPart[from:to])
+			from += n
 			time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 			if err != nil {
-				return 0, err
+				return from, err
 			}
-			if from == len(data) {
-				if len(b) > recordLen {
-					n, err := f.writer.Write(b[recordLen:])
-					if err != nil {
-						return recordLen + n, err
-					}
-				}
-				return len(b), nil
+			if from >= len(fragPart) {
+				break
 			}
 		}
+
+		n, err := f.writer.Write(fixedPart)
+		if err != nil {
+			return len(fragPart) + n, err
+		}
+		return len(b), nil
 	}
 
 	if f.fragment.PacketsFrom != 0 && (f.count < f.fragment.PacketsFrom || f.count > f.fragment.PacketsTo) {
