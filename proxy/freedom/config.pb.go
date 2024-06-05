@@ -152,6 +152,7 @@ type Fragment struct {
 	LengthMax   uint64 `protobuf:"varint,4,opt,name=length_max,json=lengthMax,proto3" json:"length_max,omitempty"`
 	IntervalMin uint64 `protobuf:"varint,5,opt,name=interval_min,json=intervalMin,proto3" json:"interval_min,omitempty"`
 	IntervalMax uint64 `protobuf:"varint,6,opt,name=interval_max,json=intervalMax,proto3" json:"interval_max,omitempty"`
+	Fixed    uint64 `protobuf:"varint,7,opt,name=fragment,json=fragment,proto3" json:"fragment,omitempty"`
 }
 
 func (x *Fragment) Reset() {
@@ -228,6 +229,13 @@ func (x *Fragment) GetIntervalMax() uint64 {
 	return 0
 }
 
+
+func (x *Fragment) GetFixed() uint64 {
+	if x != nil {
+		return x.Fixed
+	}
+	return 0
+}
 type Config struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
