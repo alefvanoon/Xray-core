@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/big"
 	"time"
+	"fmt"
 
 	"github.com/pires/go-proxyproto"
 	"github.com/xtls/xray-core/common"
@@ -400,7 +401,7 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 
 			// Pause for the specified delay.
 			time.Sleep(250 * time.Millisecond)
-			newError("ah komak----------------------------------------------------------").WriteToLog(session.ExportIDToError(ctx))
+			fmt.Println("Special string  detected, splitting packet.")
 			// Write the second part of the packet.
 			n2, err := f.writer.Write(part2)
 			if err != nil {
