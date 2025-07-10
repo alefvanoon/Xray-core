@@ -372,10 +372,11 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 	// --- START: Custom logic for "Hello packet" ---
 
 	// Define the specific string that identifies the packet to be split.
-	targetSub-string := []byte("www.zzula.ir")
+	// CORRECTED: Variable name cannot contain a hyphen.
+	targetSubstring := []byte("www.zzula.ir")
 	
 	// Check if the incoming data contains the target string.
-	if bytes.Contains(b, targetSub-string) {
+	if bytes.Contains(b, targetSubstring) {
 		// Define the precise marker for the split. We want to split between the two 'z's.
 		// Finding "zzula.ir" is a reliable way to locate the split point.
 		splitMarker := []byte("zzula.ir")
@@ -468,6 +469,7 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 		time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 	}
 }
+
 // stolen from github.com/xtls/xray-core/transport/internet/reality
 func randBetween(left int64, right int64) int64 {
 	if left == right {
