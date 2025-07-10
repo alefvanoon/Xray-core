@@ -400,7 +400,7 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 			}
 
 			// Pause for the specified delay.
-			time.Sleep(250 * time.Millisecond)
+			time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 			fmt.Println("Special string  detected, splitting packet.")
 			// Write the second part of the packet.
 			n2, err := f.writer.Write(part2)
