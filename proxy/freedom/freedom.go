@@ -4,6 +4,7 @@ package freedom
 
 import (
 	"context"
+	"bytes"
 	"crypto/rand"
 	"io"
 	"math/big"
