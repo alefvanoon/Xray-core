@@ -367,32 +367,81 @@ type FragmentWriter struct {
 	count    uint64
 }
 
+// Write function with the custom logic to split the "Hello packet".
 func (f *FragmentWriter) Write(b []byte) (int, error) {
+	// --- START: Custom logic for "Hello packet" ---
+
+	// Define the specific string that identifies the packet to be split.
+	targetSub-string := []byte("www.zzula.ir")
+	
+	// Check if the incoming data contains the target string.
+	if bytes.Contains(b, targetSub-string) {
+		// Define the precise marker for the split. We want to split between the two 'z's.
+		// Finding "zzula.ir" is a reliable way to locate the split point.
+		splitMarker := []byte("zzula.ir")
+		markerIndex := bytes.Index(b, splitMarker)
+
+		// If the marker is found, proceed with the special split logic.
+		if markerIndex != -1 {
+			// The split happens right after the first 'z'.
+			splitPoint := markerIndex + 1
+
+			part1 := b[:splitPoint]
+			part2 := b[splitPoint:]
+
+			// Write the first part of the packet.
+			n1, err := f.writer.Write(part1)
+			if err != nil {
+				// If the write fails, return bytes written and the error.
+				return n1, err
+			}
+
+			// Pause for the specified delay.
+			time.Sleep(20 * time.Millisecond)
+
+			// Write the second part of the packet.
+			n2, err := f.writer.Write(part2)
+			if err != nil {
+				// If the second write fails, return total bytes written and the error.
+				return n1 + n2, err
+			}
+
+			// On success, report that the entire original buffer was written.
+			return len(b), nil
+		}
+	}
+
+	// --- END: Custom logic. Fallback to original logic if not the special packet. ---
+
 	f.count++
 
+	// This is the original logic for generic fragmentation.
 	if f.fragment.Fixed > 0 && len(b) > int(f.fragment.Fixed) {
 		fragPart := b[:len(b)-int(f.fragment.Fixed)]
 		fixedPart := b[len(b)-int(f.fragment.Fixed):]
 
+		var totalWritten int
 		for from := 0; ; {
 			to := from + int(randBetween(int64(f.fragment.LengthMin), int64(f.fragment.LengthMax)))
 			if to > len(fragPart) {
 				to = len(fragPart)
 			}
 			n, err := f.writer.Write(fragPart[from:to])
+			totalWritten += n
 			from += n
-			time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 			if err != nil {
-				return from, err
+				return totalWritten, err
 			}
 			if from >= len(fragPart) {
 				break
 			}
+			time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 		}
 
 		n, err := f.writer.Write(fixedPart)
+		totalWritten += n
 		if err != nil {
-			return len(fragPart) + n, err
+			return totalWritten, err
 		}
 		return len(b), nil
 	}
@@ -400,23 +449,25 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 	if f.fragment.PacketsFrom != 0 && (f.count < f.fragment.PacketsFrom || f.count > f.fragment.PacketsTo) {
 		return f.writer.Write(b)
 	}
+
+	var totalWritten int
 	for from := 0; ; {
 		to := from + int(randBetween(int64(f.fragment.LengthMin), int64(f.fragment.LengthMax)))
 		if to > len(b) {
 			to = len(b)
 		}
 		n, err := f.writer.Write(b[from:to])
+		totalWritten += n
 		from += n
-		time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 		if err != nil {
-			return from, err
+			return totalWritten, err
 		}
 		if from >= len(b) {
-			return from, nil
+			return totalWritten, nil
 		}
+		time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 	}
 }
-
 // stolen from github.com/xtls/xray-core/transport/internet/reality
 func randBetween(left int64, right int64) int64 {
 	if left == right {
