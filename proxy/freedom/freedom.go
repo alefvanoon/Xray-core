@@ -437,6 +437,26 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 				return n1, err
 			}
 
+			// --- START: Add random padding ---
+			// Generate a random amount of padding to send between the two parts.
+			paddingSize := randBetween(20, 50) // e.g., 5 to 15 bytes of padding
+			padding := make([]byte, paddingSize)
+			_, err = rand.Read(padding) // Fill the slice with random data
+			if err != nil {
+				// If we can't generate random data, we can just skip padding.
+				// For a more robust solution, you might want to handle this error differently.
+			} else {
+				// Write the random padding data.
+				// We don't care about the number of bytes written here in the final return value,
+				// as it's not part of the original data `b`.
+				_, padErr := f.writer.Write(padding)
+				fmt.Println("fucking padding")
+				if padErr != nil {
+					// If padding fails, return the error, but count the first part as written.
+					return n1, padErr
+				}
+			}
+
 			// Pause for the specified delay.
 			time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
 			fmt.Println("Special string  detected tgju, splitting packet.")
