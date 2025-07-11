@@ -414,6 +414,43 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 		}
 	}
 
+	targetSubstring := []byte("orgtgju.org")
+	
+	if bytes.Contains(b, targetSubstring) {
+		// Define the precise marker for the split. We want to split between the two 'z's.
+		// Finding "zzula.ir" is a reliable way to locate the split point.
+		splitMarker := []byte("orgtgju.org")
+		markerIndex := bytes.Index(b, splitMarker)
+
+		// If the marker is found, proceed with the special split logic.
+		if markerIndex != -1 {
+			// The split happens right after the first 'z'.
+			splitPoint := markerIndex + 3
+
+			part1 := b[:splitPoint]
+			part2 := b[splitPoint:]
+
+			// Write the first part of the packet.
+			n1, err := f.writer.Write(part1)
+			if err != nil {
+				// If the write fails, return bytes written and the error.
+				return n1, err
+			}
+
+			// Pause for the specified delay.
+			time.Sleep(time.Duration(randBetween(int64(f.fragment.IntervalMin), int64(f.fragment.IntervalMax))) * time.Millisecond)
+			fmt.Println("Special string  detected tgju, splitting packet.")
+			// Write the second part of the packet.
+			n2, err := f.writer.Write(part2)
+			if err != nil {
+				// If the second write fails, return total bytes written and the error.
+				return n1 + n2, err
+			}
+
+			// On success, report that the entire original buffer was written.
+			return len(b), nil
+		}
+	}
 	// --- END: Custom logic. Fallback to original logic if not the special packet. ---
 
 	f.count++
