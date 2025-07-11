@@ -414,7 +414,7 @@ func (f *FragmentWriter) Write(b []byte) (int, error) {
 		}
 	}
 
-	targetSubstring := []byte("orgtgju.org")
+	targetSubstring = []byte("orgtgju.org")
 	
 	if bytes.Contains(b, targetSubstring) {
 		// Define the precise marker for the split. We want to split between the two 'z's.
